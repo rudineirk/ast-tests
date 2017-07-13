@@ -1,27 +1,50 @@
-import json
-from codecs import open
-from pprint import pprint
+from json import dumps
 
 import tatsu
+from tatsu.walkers import NodeWalker
+
+
+class UmsgNodeWalker(NodeWalker):
+    def walk_Start(self, nodes):
+        values = {}
+        for stmt in nodes.ast:
+            stmt = self.walk(stmt)
+            values[stmt[0]] = stmt[1]
+
+        return values
+
+    def walk_Assignment(self, node):
+        var = self.walk(node.var)
+        value = self.walk(node.value)
+        return (var, value)
+
+    def walk_Identifier(self, node):
+        return node.ast
+
+    def walk_BoolTrue(self, node):
+        return True
+
+    def walk_BoolFalse(self, node):
+        return False
+
+    def walk_Int(self, node):
+        return int(node.ast)
+
+    def walk_Float(self, node):
+        return float(node.ast)
+
+    def walk_String(self, node):
+        return node.ast[1:-1]
 
 
 def simple_parse():
-    grammar = open('atom.ebnf').read()
+    grammar = open('umsg.ebnf').read()
+    code = open('example.umsg').read()
 
-    parser = tatsu.compile(grammar)
-    ast = parser.parse('''
-    teste = 1;
-    alpha1='teste\\'';
-    ''')
-
-    print('# SIMPLE PARSE')
-    print('# AST')
-    pprint(ast, width=20, indent=4)
-
-    print()
-
-    print('# JSON')
-    print(json.dumps(ast, indent=4))
+    parser = tatsu.compile(grammar, asmodel=True)
+    ast = parser.parse(code)
+    walker = UmsgNodeWalker()
+    print(dumps(walker.walk(ast), indent=2))
 
 
 def main():
