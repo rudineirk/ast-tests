@@ -1,3 +1,6 @@
 teste = true
 aaa1 = 'teste\''
 this = 1
+value = 1.5
+value2 = .5
+value3 = 1.
